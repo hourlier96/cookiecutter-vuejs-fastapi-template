@@ -20,9 +20,10 @@ RUN apt-get update \
     && apt-get -y install libpq-dev gcc
 
 RUN pip install --no-cache-dir --upgrade pip && \
+    pip install debugpy && \
     pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-COPY ./.env* /code/.env
+COPY ./.env /code/.env
 COPY ./app /code/app
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
+CMD ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
