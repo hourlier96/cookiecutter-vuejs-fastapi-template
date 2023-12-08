@@ -44,11 +44,11 @@ npm run dev
 # WITH DOCKER
 # Dev server (vite)
 docker build -t <image>:<tag> -f Dockerfile.dev .
-docker run -p 5173:5173 <image>:<tag>
+docker run --name {{ cookiecutter.project_slug }} -p 5173:5173 <image>:<tag>
 
 # Prod server (nginx)
 docker build -t <image>:<tag> -f Dockerfile.prod .
-docker run -p <host_port>:8080 <image>:<tag>  # Port forward to nginx
+docker run --name {{ cookiecutter.project_slug }} -p <host_port>:8080 <image>:<tag>  # Port forward to nginx
 
 ```
 

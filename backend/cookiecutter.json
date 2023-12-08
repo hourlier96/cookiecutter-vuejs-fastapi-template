@@ -15,11 +15,13 @@
     "Benjamin Solano",
     "Valdo Negou"
   ],
+  "as_container": true,
   "__prompts__": {
     "repository_name": "Empty repository name you want to push to (let empty to refuse):",
     "project_name": "Select your project name:",
     "project_slug": "Select your project slug",
     "description": "Add a description to the ReadMe",
-    "maintainer": "Select the main maintainer of the project:"
+    "maintainer": "Select the main maintainer of the project:",
+    "as_container": "Use Docker configuration (Local containers & Cloud Run auto-deploy) ?"
   }
 }

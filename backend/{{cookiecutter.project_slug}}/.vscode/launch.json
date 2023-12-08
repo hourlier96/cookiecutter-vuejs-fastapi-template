@@ -5,17 +5,30 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "backend: run",
+      "name": "FastAPI run server",
       "type": "python",
       "request": "launch",
       "module": "uvicorn",
       "args": ["app.main:app", "--reload"],
       "jinja": true,
-      // Change "justMyCode" to `false` if the
-      // server doesn't start before even reaching your code.
       "justMyCode": true,
       "env": {
         "PYDEVD_DISABLE_FILE_VALIDATION": "1"
+      }
+    },
+    {
+      "name": "Docker: Build & Run",
+      "type": "docker",
+      "request": "launch",
+      "preLaunchTask": "docker-run: debug",
+      "python": {
+        "pathMappings": [
+          {
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "/app"
+          }
+        ],
+        "projectType": "fastapi"
       }
     }
   ]

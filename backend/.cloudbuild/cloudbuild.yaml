@@ -1,0 +1,47 @@
+steps:
+  - id: set-env
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: bash
+    args:
+      - -c
+      - gcloud secrets versions access latest --secret=$_SERVICE --project=$PROJECT_ID --format='get(payload.data)' | tr '_-' '/+' | base64 -d > .env
+
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - europe-docker.pkg.dev/$PROJECT_ID/$_REPO/$_SERVICE
+      - -f
+      - Dockerfile.prod
+      - .
+
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - europe-docker.pkg.dev/$PROJECT_ID/$_REPO/$_SERVICE
+
+  - id: deploy
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        gcloud run deploy $_SERVICE \
+        --project $PROJECT_ID \
+        --image europe-docker.pkg.dev/$PROJECT_ID/$_REPO/$_SERVICE \
+        --allow-unauthenticated \
+        --set-env-vars=PROJECT_ID=$PROJECT_ID \
+        --region europe-west1 \
+        --timeout 3600
+
+images:
+  - europe-docker.pkg.dev/$PROJECT_ID/$_REPO/$_SERVICE
+
+substitutions:
+  _REPO: cookiecutter-template
+  _SERVICE: "{{ cookiecutter.project_slug.replace('_', '-') }}"
+
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -1,0 +1,44 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "docker-build",
+      "label": "docker-build",
+      "platform": "python",
+      "dockerBuild": {
+        "tag": "fastapi_template:latest",
+        "dockerfile": "${workspaceFolder}/Dockerfile",
+        "context": "${workspaceFolder}",
+        "pull": true
+      }
+    },
+    {
+      "type": "docker-run",
+      "label": "docker-run: debug",
+      "dependsOn": ["docker-build"],
+      "dockerRun": {
+        "ports": [
+          {
+            "hostPort": 8000,
+            "containerPort": 8000
+          }
+        ],
+        "env": {
+          "GOOGLE_APPLICATION_CREDENTIALS": "/gcp/application_default_credentials.json",
+          "GCLOUD_PROJECT": "sandbox-ahourlier"
+        },
+        "volumes": [
+          {
+            "localPath": "/home/augustin/.config/gcloud",
+            "containerPath": "/gcp",
+            "permissions": "ro"
+          }
+        ]
+      },
+      "python": {
+        "args": ["app.main:app", "--host", "0.0.0.0", "--port", "8000"],
+        "module": "uvicorn"
+      }
+    }
+  ]
+}
