@@ -73,6 +73,10 @@ cookiecutter cookiecutter-vuejs-fastapi-template/backend   # Will ask your needs
 
 ### TODO
 
+#### Both
+
+- Add access token to .env & check existence after project creation to call Github API
+
 #### Back
 
 - Allow to choose either Firestore or SQL + use multi cookiecutter.json
