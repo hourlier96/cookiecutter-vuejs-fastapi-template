@@ -72,3 +72,15 @@ def checkAsContainerOption():
         os.remove("Dockerfile")
         os.remove("Dockerfile.prod")
         shutil.rmtree(".cloudbuild")
+
+
+def checkDatabaseTypeOption(value):
+    """
+    Check database type choice and set folders according to it
+    """
+    if value == "Firestore client":
+        print("Setting up Firestore client configuration...")
+    if value == "SQLAlchemy":
+        print("Setting up SQLAlchemy 2.0 configuration...")
+    if value == "Both":
+        print("Setting up Firestore client & SQLAlchemy 2.0 configurations...")

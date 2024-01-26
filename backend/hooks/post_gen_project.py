@@ -31,6 +31,8 @@ if __name__ == "__main__":
             else:
                 print("No github token found. Skip branches protection...")
 
+        main.checkDatabaseTypeOption("{{ cookiecutter.database }}")
+
         if "{{ cookiecutter.as_container }}" == "False":
             main.checkAsContainerOption()
 

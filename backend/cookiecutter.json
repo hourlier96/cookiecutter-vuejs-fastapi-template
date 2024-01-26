@@ -15,14 +15,20 @@
     "Benjamin Solano",
     "Valdo Negou"
   ],
+  "database": [
+    "Firestore client",
+    "SQLAlchemy",
+    "Both"
+  ],
   "as_container": true,
   "gcloud_project": "<GCLOUD_PROJECT>",
   "__prompts__": {
     "repository_name": "Empty repository name you want to push to (let empty to refuse):",
     "project_name": "Select your project name:",
-    "project_slug": "Select your project slug",
-    "description": "Add a description to the ReadMe",
+    "project_slug": "Select your project slug:",
+    "description": "Add a description to the ReadMe:",
     "maintainer": "Select the main maintainer of the project:",
+    "database": "Select the type of database you need:",
     "as_container": "Use Docker configuration (Local containers & Cloud Run auto-deploy) ?",
     "gcloud_project": "What is your Google Cloud project ID?"
   }
