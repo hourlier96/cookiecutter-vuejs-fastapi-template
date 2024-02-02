@@ -107,6 +107,8 @@ cookiecutter cookiecutter-vuejs-fastapi-template/backend   # Will ask your needs
 
 - **'maintainer'** has an informativ goal (not used in the template)
 
+- **'database'** make you choose which type of database will be provided (Firestore, PostgreSQL with SQLModel, or Both)
+
 - **'as_container'** provide local dockerization and auto deploy on Cloud Run
 
 - **'gcloud_project'** is the GCP project ID on which the project will be deployed

@@ -23,11 +23,17 @@
   poetry install
   ```
 
+- Apply migrations
+
+  ```sh
+  alembic upgrade head        # Ensure your database is running, and SQLALCHEMY_DATABASE_URI env variable is correctly setup
+  ```
+
 ### Run locally
 
 ```sh
 # WITHOUT DOCKER (Guess ADC from env)
-uvicorn app.main:app --reload # Or from VSCode launcher
+uvicorn app.main:app --reload          # Or from VSCode launcher
 
 # OR
 

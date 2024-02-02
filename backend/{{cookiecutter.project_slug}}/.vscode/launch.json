@@ -6,7 +6,7 @@
   "configurations": [
     {
       "name": "FastAPI run server",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "module": "uvicorn",
       "args": ["app.main:app", "--reload"],

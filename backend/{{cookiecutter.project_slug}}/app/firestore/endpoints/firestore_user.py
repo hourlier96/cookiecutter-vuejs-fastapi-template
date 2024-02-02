@@ -8,9 +8,12 @@ from app.models.base import Page
 
 router = APIRouter()
 
+
 USER_COLLECTION = "Users"
 
 
+# This suppose you have a 'Users' firestore
+# collection respecting the UserRead model
 @router.get(
     "",
     response_model=Page[UserRead],
@@ -18,7 +21,7 @@ USER_COLLECTION = "Users"
 )
 def get_users() -> Page[UserRead]:
     users = crud.firestore.get_all_documents(USER_COLLECTION)
-    return {"items": users, "total": len(users)}
+    return Page(items=users, total=len(users))
 
 
 @router.get(
