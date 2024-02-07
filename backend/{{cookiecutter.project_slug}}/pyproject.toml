@@ -20,6 +20,7 @@ starlette-context = "^0.3.6"
 asgi-correlation-id = "^4.2.0"
 google-cloud-firestore = "^2.11.1"
 sqlmodel = "^0.0.14"
+pyjwt = "^2.8.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.1"
