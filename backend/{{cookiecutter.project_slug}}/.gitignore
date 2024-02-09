@@ -1,1 +1,3 @@
 .env
+hooks_modules/
+**/pycache/**
