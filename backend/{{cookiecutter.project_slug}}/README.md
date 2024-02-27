@@ -47,6 +47,13 @@ docker run --name {{ cookiecutter.project_slug }} -p 8000:8000 -p 5678:5678 -v "
 
 ```
 
+### Cloud Run & Cloud SQL
+
+To allow communication between Cloud Run service & SQL instance:
+
+- Make sure connection string in .env is correct
+- [Add the connection name of your SQL instance in Cloud Run service configuration](https://cloud.google.com/sql/docs/postgres/connect-run#configure)
+
 ## Api docs
 
 - [Swagger](http://localhost:8000/api/docs)

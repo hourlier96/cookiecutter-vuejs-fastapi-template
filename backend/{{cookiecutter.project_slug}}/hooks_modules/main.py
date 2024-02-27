@@ -80,7 +80,9 @@ def checkDatabaseTypeOption(value):
     """
     if value == "Firestore client":
         print("Setting up Firestore client configuration...")
+        shutil.rmtree("app/sqlmodel")
     if value == "SQLAlchemy":
         print("Setting up SQLAlchemy 2.0 configuration...")
+        shutil.rmtree("app/firestore")
     if value == "Both":
         print("Setting up Firestore client & SQLAlchemy 2.0 configurations...")

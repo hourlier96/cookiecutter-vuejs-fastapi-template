@@ -2,10 +2,10 @@ from typing import Optional
 
 from sqlmodel import Field
 
-from app.sqlmodel.models.base import AppBase
+from app.sqlmodel.models.base import AppBase, TableBase
 
 
-class UserTodo(AppBase, table=True):
+class UserTodo(AppBase, TableBase, table=True):
     """Linking table between User and Todo"""
 
     todo_id: Optional[int] = Field(

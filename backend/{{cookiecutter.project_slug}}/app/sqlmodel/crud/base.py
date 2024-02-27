@@ -44,7 +44,7 @@ class CRUDBase(Generic[ModelType, CreateModelType, UpdateModelType]):
         )
 
     def create(self, db: Session, *, obj_in: CreateModelType, commit: bool = True) -> ModelType:
-        db_obj = self.model.from_orm(obj_in)
+        db_obj = self.model.model_validate(obj_in)
         db.add(db_obj)
         if commit:
             db.commit()
@@ -59,12 +59,12 @@ class CRUDBase(Generic[ModelType, CreateModelType, UpdateModelType]):
         obj_in: Union[UpdateModelType, Dict[str, Any]],
         commit: bool = True,
     ) -> ModelType:
-        obj_data = jsonable_encoder(db_obj)
+
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
-            update_data = obj_in.dict(exclude_unset=True)
-        for field in obj_data:
+            update_data = obj_in.model_dump(exclude_unset=True)
+        for field in update_data:
             snake_field = to_snake(field)
             if snake_field in update_data:
                 setattr(db_obj, snake_field, update_data[snake_field])

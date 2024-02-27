@@ -12,6 +12,7 @@ This repository provides:
 - a [FastAPI](https://fastapi.tiangolo.com/) base stack integrated with [GCP](https://console.cloud.google.com/)
   - Runnable from VSCode launch with or without docker containers
   - Generic [Firestore](https://firebase.google.com/docs/firestore?hl=fr) client (authentication with [ADC](https://cloud.google.com/docs/authentication/provide-credentials-adc?hl=fr))
+  - Generic [PostgreSQL](https://www.postgresql.org/about/) client wrapped with [SQLModel](https://sqlmodel.tiangolo.com/) (SQLAlchemy 2.0)
   - Environment injection from .env file
 
 These templates are:
@@ -43,6 +44,9 @@ These templates are:
   ENV="local"
   GCLOUD_PROJECT_ID="{{cookiecutter.gcloud_project}}"   # Don't modify value here (replaced at generation)
   GITHUB_ACCESS_TOKEN="<YOUR_PERSONAL_ACCESS_TOKEN>"    # Used to set branch protection
+
+  # SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://<DB_USERNAME>:<DB_PASSWORD>@/<DB_NAME>
+  # Add '?host=/cloudsql/<DB_INSTANCE_NAME>' for deployed version
   ```
 
 ## Generate Frontend Project
@@ -55,14 +59,14 @@ cookiecutter cookiecutter-vuejs-fastapi-template/frontend   # Will ask your need
 
 - **'repository_name'** allows you to specify an empty-existing Git repository to push the template on.
 
-```bash
-<github_username>/<repo_name>  # Required format
+  ```bash
+  <github_username>/<repo_name>  # Required format
 
-# 1. Ensure you have corrects SSH rights & access
+  # 1. Ensure you have corrects SSH rights & access
 
-# 2. This will also set branch protection if you specified GITHUB_ACCESS_TOKEN variable in .env.
-# Change settings as you convenience in hooks_modules/branch_protection.json
-```
+  # 2. This will also set branch protection if you specified GITHUB_ACCESS_TOKEN variable in .env.
+  # Change settings as you convenience in hooks_modules/branch_protection.json
+  ```
 
 - **'project_name'** is the name on the top of ReadMe.
 
@@ -90,14 +94,14 @@ cookiecutter cookiecutter-vuejs-fastapi-template/backend   # Will ask your needs
 
 - **'repository_name'** allows you to specify an empty-existing Git repository to push the template on.
 
-```bash
-<github_username>/<repo_name>  # Required format
+  ```bash
+  <github_username>/<repo_name>  # Required format
 
-# 1. Ensure you have corrects SSH rights & access
+  # 1. Ensure you have corrects SSH rights & access
 
-# 2. This will also set branch protection if you specified GITHUB_ACCESS_TOKEN variable in .env.
-# Change settings as you convenience in hooks_modules/branch_protection.json
-```
+  # 2. This will also set branch protection if you specified GITHUB_ACCESS_TOKEN variable in .env.
+  # Change settings as you convenience in hooks_modules/branch_protection.json
+  ```
 
 - **'project_name'** is the name on the top of ReadMe.
 
