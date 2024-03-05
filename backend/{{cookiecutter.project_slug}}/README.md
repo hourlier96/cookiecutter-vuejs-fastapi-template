@@ -47,6 +47,12 @@ docker run --name {{ cookiecutter.project_slug }} -p 8000:8000 -p 5678:5678 -v "
 
 ```
 
+## Tests
+
+```sh
+poetry run pytest --cov=app --cov-report=term     # Uses SQLALCHEMY_DATABASE_URI in pyproject.toml
+```
+
 ### Cloud Run & Cloud SQL
 
 To allow communication between Cloud Run service & SQL instance:

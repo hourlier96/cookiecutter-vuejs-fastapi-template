@@ -16,6 +16,8 @@ class UserBase(AppBase):
     first_name: str
     last_name: str
     email: str
+    is_admin: bool
+    login_times: int | None
 
 
 class User(UserBase, TableBase, table=True):

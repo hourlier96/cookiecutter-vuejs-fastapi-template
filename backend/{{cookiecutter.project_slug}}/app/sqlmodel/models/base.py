@@ -22,7 +22,7 @@ def convert_datetime_to_realworld(dt: datetime) -> str:
 
 
 class AppBase(SQLModel):
-    class Config:
+    class ConfigDict:
         alias_generator = to_camel
         populate_by_name = True
         json_encoders = {datetime: convert_datetime_to_realworld}

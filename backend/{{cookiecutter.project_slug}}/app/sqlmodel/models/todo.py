@@ -1,5 +1,5 @@
 import enum
-from typing import TYPE_CHECKING, List, Optional
+from typing import List, Optional
 
 from sqlmodel import Relationship
 

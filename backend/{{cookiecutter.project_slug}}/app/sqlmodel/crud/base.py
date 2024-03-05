@@ -1,9 +1,8 @@
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy import asc, desc
-from sqlalchemy.orm import Query
-from sqlmodel import Session, SQLModel
+from sqlalchemy.sql.expression import Select
+from sqlmodel import Session, SQLModel, select
 
 from app.models.base import Page
 from app.sqlmodel.models.base import QueryFilter, TableBase, to_snake
@@ -23,7 +22,8 @@ class CRUDBase(Generic[ModelType, CreateModelType, UpdateModelType]):
         self.model = model
 
     def get(self, db: Session, id: int) -> Optional[ModelType]:
-        return db.query(self.model).filter(self.model.id == id).first()
+        statement = select(self.model).where(self.model.id == id)
+        return db.exec(statement).first()
 
     def get_multi(
         self,
@@ -35,12 +35,12 @@ class CRUDBase(Generic[ModelType, CreateModelType, UpdateModelType]):
         filters: Optional[List[QueryFilter]] = [],
         is_desc: bool = False,
     ) -> Page[ModelType]:
-        q = db.query(self.model)
+        statement = select(self.model)
         if filters:
-            q = self.update_query_with_filters_(q, filters)
+            statement = self.update_query_with_filters_(statement, filters)
 
         return self.order_and_paginate_results(
-            q, skip=skip, limit=limit, sort=sort, is_desc=is_desc
+            statement, db, skip=skip, limit=limit, sort=sort, is_desc=is_desc
         )
 
     def create(self, db: Session, *, obj_in: CreateModelType, commit: bool = True) -> ModelType:
@@ -76,7 +76,7 @@ class CRUDBase(Generic[ModelType, CreateModelType, UpdateModelType]):
         return db_obj
 
     def remove(self, db: Session, *, id: int, commit: bool = True) -> Optional[ModelType]:
-        obj = db.query(self.model).get(id)
+        obj = db.exec(select(self.model).where(self.model.id == id)).first()
         db.delete(obj)
         if commit:
             db.commit()
@@ -84,7 +84,8 @@ class CRUDBase(Generic[ModelType, CreateModelType, UpdateModelType]):
 
     def order_and_paginate_results(
         self,
-        q: Query,
+        statement: Select,
+        db: Session,
         *,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
@@ -96,22 +97,23 @@ class CRUDBase(Generic[ModelType, CreateModelType, UpdateModelType]):
             try:
                 sort_field = getattr(self.model, sort)
                 order_by = desc(sort_field) if is_desc else asc(sort_field)
-                q = q.order_by(order_by)
+                statement = statement.order_by(order_by)
             except AttributeError:
                 pass
 
         if skip is not None:
-            q = q.offset(skip)
+            statement = statement.offset(skip)
 
         if limit is not None:
-            q = q.limit(limit)
+            statement = statement.limit(limit)
 
-        total = q.count()
-        items = q.all()
-
+        items = db.exec(statement).all()
+        total = len(items)
         return Page(items=items, total=total)
 
-    def update_query_with_filters_(self, q: Query, query_filters: List[QueryFilter]) -> Query:
+    def update_query_with_filters_(
+        self, statement: Select, query_filters: List[QueryFilter]
+    ) -> Select:
         operator_matcher = {
             "alchemy_func": {
                 "=": "__eq__",
@@ -134,24 +136,26 @@ class CRUDBase(Generic[ModelType, CreateModelType, UpdateModelType]):
             },
         }
         for query_filter in query_filters:
-            q = self.manage_operators(q, query_filter, operator_matcher)
+            statement = self.manage_operators(statement, query_filter, operator_matcher)
 
-        return q
+        return statement
 
     def manage_operators(
-        self, q: Query, query_filter: QueryFilter, operator_matcher: dict
-    ) -> Query:
+        self, statement: Select, query_filter: QueryFilter, operator_matcher: dict
+    ) -> Select:
         attribute = getattr(self.model, query_filter.field)
         if not attribute:
             raise AttributeError(f"{self.model.__name__} has no attribute {query_filter.field}")
         if query_filter.operator in operator_matcher["alchemy_func"]:
             operator_value = operator_matcher["alchemy_func"][query_filter.operator]
             column_operator = getattr(attribute, operator_value)
-            q = q.filter(column_operator(query_filter.value))
+            statement = statement.where(column_operator(query_filter.value))
         elif query_filter.operator in operator_matcher["built_in"]:
             operator_value = operator_matcher["built_in"][query_filter.operator]
-            q = q.filter(eval(f"{attribute} {operator_value}", {self.model.__name__: self.model}))
+            statement = statement.where(
+                eval(f"{attribute} {operator_value}", {self.model.__name__: self.model})
+            )
         else:
             raise ValueError(f"Operator {query_filter.operator} is not supported")
 
-        return q
+        return statement

@@ -24,8 +24,6 @@ from app.api.router import api_router
 from app.core.cloud_logging import LoggingMiddleware, log, logger_struct
 from app.core.config import settings
 
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
 
 class ExceptionMiddleware(BaseHTTPMiddleware):
     async def dispatch(

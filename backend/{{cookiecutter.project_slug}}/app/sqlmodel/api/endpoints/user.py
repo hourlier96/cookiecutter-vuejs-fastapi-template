@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
@@ -55,4 +55,22 @@ def create_user(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not create user"
         )
+    return user
+
+
+@router.get(
+    "/{_id}",
+    response_model=UserRead,
+)
+def read_todo(
+    *,
+    db: Session = Depends(get_session),
+    _id: int,
+) -> User:
+    """
+    Get todo by ID.
+    """
+    user = crud.users.get(db=db, id=_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user

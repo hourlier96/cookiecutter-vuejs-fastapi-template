@@ -25,8 +25,8 @@ down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-NB_TODO = 50
-NB_USERS = 20
+NB_TODO = 500
+NB_USERS = 120
 
 
 def upgrade():
@@ -49,6 +49,8 @@ def upgrade():
         sa.Column("first_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("last_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("email", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("is_admin", sa.Boolean(), nullable=False),
+        sa.Column("login_times", sa.Integer(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
@@ -100,6 +102,8 @@ def upgrade():
                 "first_name": fake.unique.first_name(),
                 "last_name": (fake.unique.last_name()),
                 "email": fake.unique.ascii_free_email(),
+                "is_admin": fake.pybool(),
+                "login_times": random.randint(0, 1000) if random.random() < 0.5 else None,
                 "created_at": fake.date_time_this_month(),
                 "updated_at": fake.date_time_this_month(),
             }

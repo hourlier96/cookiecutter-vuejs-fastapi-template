@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.sqlmodel import crud
 from app.sqlmodel.api.deps import get_session, parse_query_filter_params
@@ -84,7 +84,7 @@ def create_todo(
     try:
         todo = crud.todos.create(db=db, obj_in=todo_in, commit=False)
         if todo_in.users_id:
-            users_list = db.query(User).filter(User.id.in_(todo_in.users_id)).all()  # type:ignore
+            users_list = db.exec(select(User).where(User.id.in_(todo_in.users_id))).all()
             todo.users = [u for u in users_list]
     except Exception as e:
         db.rollback()

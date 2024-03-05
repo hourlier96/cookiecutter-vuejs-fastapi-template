@@ -23,6 +23,9 @@
             "containerPort": 8000
           }
         ],
+        // To allow communication between docker-compose services,
+        // consider adding the network created by docker-compose
+        // "network": "<network-name>",
         "env": {
           "GOOGLE_APPLICATION_CREDENTIALS": "/gcp/application_default_credentials.json",
           "GCLOUD_PROJECT": "{{cookiecutter.gcloud_project}}"

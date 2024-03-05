@@ -21,12 +21,22 @@ asgi-correlation-id = "^4.2.0"
 google-cloud-firestore = "^2.11.1"
 sqlmodel = "^0.0.14"
 pyjwt = "^2.8.0"
+pytest = "^8.0.2"
+pytest-mock = "^3.12.0"
+pytest-cov = "^4.1.0"
+pytest-env = "^1.1.3"
 
 [tool.poetry.dev-dependencies]
 black = "^22.1"
 flake8 = "^4.0.1"
 
-
 [tool.black]
 line-length = 99                                                              # override black's default line-length
 exclude = '(\.git|\.mypy_cache|\.tox|venv|\.venv|_build|buck-out|build|dist)'
+
+[tool.pytest.ini_options]
+env = [
+    "ENV=test",
+    "SQLALCHEMY_DATABASE_URI=postgresql://postgres:postgres@localhost:5435/{{cookiecutter.project_slug}}_test",
+    "SQLALCHEMY_SILENCE_UBER_WARNING=1",
+]
