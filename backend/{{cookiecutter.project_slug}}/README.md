@@ -53,6 +53,28 @@ docker run --name {{ cookiecutter.project_slug }} -p 8000:8000 -p 5678:5678 -v "
 poetry run pytest --cov=app --cov-report=term     # Uses SQLALCHEMY_DATABASE_URI in pyproject.toml
 ```
 
+### Deployment
+
+.cloudbuild/cloudbuild.yaml is used automatically to deploy to Cloud Run according to your Cloud Build trigger configuration
+
+*Requirements*:
+
+- Create a Cloud Build trigger and specify the cloudbuild.yaml path
+  - You will have to link Github repository to Cloud Build
+
+- Add .env in a Secret named '{{ cookiecutter.project_slug.replace('_', '-') }}'
+
+- APIs enabled:
+
+  - Cloud Build API
+  - Cloud Run API
+  - Secret Manager API
+
+- Roles:
+
+  - Cloud Build Service Account has Cloud Run Admin role
+  - Cloud Build Service Account has Secret Manager Secret Accessor role
+
 ### Cloud Run & Cloud SQL
 
 To allow communication between Cloud Run service & SQL instance:

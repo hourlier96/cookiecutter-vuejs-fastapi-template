@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     API_PREFIX: str = "/api"
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:5174"]
 
-    SQLALCHEMY_DATABASE_URI: str = "postgresql://postgres:postgres@localhost:5432/{{ cookiecutter.project_slug }}"
+    SQLALCHEMY_DATABASE_URI: str = "postgresql://postgres:postgres@localhost:5432/db"
     MAX_PAGE_SIZE: int = 100
 
     GITHUB_ACCESS_TOKEN: Optional[str] = None

@@ -1,10 +1,10 @@
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlmodel import Session
 
-from app.sqlmodel import crud
-from app.sqlmodel.api.deps import get_session, parse_query_filter_params
+
+from app.sqlmodel.crud.user import users as crud_user
+from app.sqlmodel.api.deps import session_dep, parse_query_filter_params
 from app.core.cloud_logging import log
 from app.core.config import settings
 from app.models.base import Page
@@ -18,9 +18,9 @@ router = APIRouter()
     "",
     response_model=Page[UserRead],
 )
-def read_user(
+async def read_users(
     *,
-    db: Session = Depends(get_session),
+    db: session_dep,
     skip: Optional[int] = Query(0, ge=0),
     limit: Optional[int] = Query(None, ge=1, le=settings.MAX_PAGE_SIZE),
     sort: Optional[str] = None,
@@ -30,7 +30,7 @@ def read_user(
     """
     Retrieve user.
     """
-    users = crud.users.get_multi(
+    users = await crud_user.get_multi(
         db, skip=skip, limit=limit, sort=sort, is_desc=is_desc, filters=filters
     )
     return users
@@ -40,16 +40,16 @@ def read_user(
     "",
     response_model=UserRead,
 )
-def create_user(
+async def create_user(
     *,
-    db: Session = Depends(get_session),
+    db: session_dep,
     user_in: UserCreate,
 ) -> User:
     """
     Create new user.
     """
     try:
-        user = crud.users.create(db=db, obj_in=user_in)
+        user = await crud_user.create(db=db, obj_in=user_in)
     except Exception as e:
         log.exception(e)
         raise HTTPException(
@@ -62,15 +62,15 @@ def create_user(
     "/{_id}",
     response_model=UserRead,
 )
-def read_todo(
+async def read_user(
     *,
-    db: Session = Depends(get_session),
+    db: session_dep,
     _id: int,
-) -> User:
+) -> Any:
     """
-    Get todo by ID.
+    Get user by ID
     """
-    user = crud.users.get(db=db, id=_id)
+    user = await crud_user.get(db=db, id=_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user

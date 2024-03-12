@@ -66,21 +66,21 @@ This will run linting for every Pull Request on develop, uat and master branches
 
 *Requirements*:
 
-APIs enabled:
+- Create a Cloud Build trigger and specify the cloudbuild.yaml path
+  - You will have to link Github repository to Cloud Build
 
-- Cloud Build API
-- Cloud Run API
-- Secret Manager API
+- Add .env in a Secret named '{{ cookiecutter.project_slug.replace('_', '-') }}'
 
-Roles:
+- APIs enabled:
 
-- Cloud Build Service Account has Cloud Run Admin role
-- Cloud Build Service Account has Secret Manager Secret Accessor role
+  - Cloud Build API
+  - Cloud Run API
+  - Secret Manager API
 
-Other:
+- Roles:
 
-- Cloud Build trigger created for the repository
-- Secret Manager secret created with same name as the project_slug you specified
+  - Cloud Build Service Account has Cloud Run Admin role
+  - Cloud Build Service Account has Secret Manager Secret Accessor role
 
 ### Maintainers
 

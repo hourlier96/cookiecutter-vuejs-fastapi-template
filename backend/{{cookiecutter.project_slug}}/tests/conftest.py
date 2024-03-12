@@ -1,58 +1,68 @@
-from typing import Generator, Optional
+import asyncio
+from contextlib import ExitStack
 
 import pytest
-from faker import Faker
-from fastapi.testclient import TestClient
-from sqlalchemy import event
-from sqlmodel import Session
+import httpx
 
+from app.main import app as actual_app
 from app.sqlmodel import SQLModel
-from app.sqlmodel import engine
-
-fake = Faker()
-test_session = None
+from app.sqlmodel.db import DatabaseAsyncSessionManager, get_db_session
 
 
-def get_test_session() -> Optional[Session]:
-    return test_session
+@pytest.fixture(autouse=True)
+def app():
+    with ExitStack():
+        yield actual_app
+
+
+def get_sqlalchemy_database_uri(config):
+    """
+    Function to get SQLALCHEMY_DATABASE_URI from pytest configuration.
+    """
+    env_options = config.getini("env")
+    for option in env_options:
+        if option.startswith("SQLALCHEMY_DATABASE_URI="):
+            return option.split("=", 1)[1]
+    raise ValueError("SQLALCHEMY_DATABASE_URI not found in pytest configuration")
 
 
 @pytest.fixture(scope="session")
-def session() -> Generator:
-    SQLModel.metadata.create_all(engine)
+def session_manager(request):
+    return DatabaseAsyncSessionManager(get_sqlalchemy_database_uri(request.config))
 
-    with Session(engine, autoflush=False, autocommit=False) as s:
-        global test_session
-        test_session = s
-        yield s
 
-    SQLModel.metadata.drop_all(engine)
+@pytest.fixture(scope="function", autouse=True)
+async def setup_database(session_manager: DatabaseAsyncSessionManager):
+    async with session_manager._engine.begin() as conn:
+        asyncio.get_running_loop()
+        await conn.run_sync(SQLModel.metadata.drop_all)
+        await conn.run_sync(SQLModel.metadata.create_all)
 
 
 @pytest.fixture(scope="function")
-def db(session: Session) -> Generator:
-    # we use nested session (savepoint) in order to rollback all changes between each tests
-    session.begin_nested()
-
-    @event.listens_for(session, "after_transaction_end")
-    def restart_savepoint(sess: Session, transaction) -> None:  # type: ignore
-        if transaction.nested and not transaction._parent.nested:
-            sess.begin_nested()
-
-    yield session
-
-    try:
-        session.rollback()
-        event.remove(session, "after_transaction_end", restart_savepoint)
-    finally:
-        session.close()
-
-
-@pytest.fixture(scope="session")
-def client() -> Generator:
-    from app.sqlmodel.api.deps import get_session
-    from app.main import app
-
-    app.dependency_overrides[get_session] = get_test_session
-    with TestClient(app) as c:
+async def client():
+    async with httpx.AsyncClient(app=actual_app, base_url="http://localhost:8000") as c:
         yield c
+
+
+@pytest.fixture(scope="function", autouse=True)
+async def transactional_session(session_manager: DatabaseAsyncSessionManager):
+    async with session_manager.session() as session:
+        try:
+            await session.begin()
+            yield session
+        finally:
+            await session.rollback()  # Rolls back the outer transaction
+
+
+@pytest.fixture(scope="function")
+async def db(transactional_session):
+    yield transactional_session
+
+
+@pytest.fixture(scope="function", autouse=True)
+async def session_override(app, db):
+    async def get_db_session_override():
+        yield db
+
+    app.dependency_overrides[get_db_session] = get_db_session_override

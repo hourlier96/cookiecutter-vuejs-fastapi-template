@@ -38,7 +38,9 @@ def upgrade():
         sa.Column("id", sa.Integer(), nullable=True),
         sa.Column("title", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column("priority", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column(
+            "priority", sa.Enum("LOW", "MEDIUM", "HIGH", name="todopriority"), nullable=False
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(

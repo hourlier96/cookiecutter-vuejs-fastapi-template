@@ -1,19 +1,11 @@
 import json
-from typing import Generator, List, Optional
-
-from fastapi import HTTPException, status
-from fastapi.security import HTTPBearer
-from sqlmodel import Session
-
-from app.sqlmodel import engine
+from typing import Annotated, List, Optional
+from fastapi import HTTPException, status, Depends
 from app.sqlmodel.models.base import QueryFilter
+from app.sqlmodel.db import get_db_session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-oauth2_scheme = HTTPBearer()
-
-
-def get_session() -> Generator:
-    with Session(engine) as session:
-        yield session
+session_dep = Annotated[AsyncSession, Depends(get_db_session)]
 
 
 def parse_query_filter_params(filters: Optional[str] = None) -> List[QueryFilter]:

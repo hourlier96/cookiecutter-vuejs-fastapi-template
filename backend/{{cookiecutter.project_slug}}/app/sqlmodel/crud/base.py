@@ -1,8 +1,9 @@
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from sqlalchemy import asc, desc
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import Select
-from sqlmodel import Session, SQLModel, select
+from sqlmodel import SQLModel, select
 
 from app.models.base import Page
 from app.sqlmodel.models.base import QueryFilter, TableBase, to_snake
@@ -21,13 +22,13 @@ class CRUDBase(Generic[ModelType, CreateModelType, UpdateModelType]):
         """
         self.model = model
 
-    def get(self, db: Session, id: int) -> Optional[ModelType]:
+    async def get(self, db: AsyncSession, id: int) -> Optional[ModelType]:
         statement = select(self.model).where(self.model.id == id)
-        return db.exec(statement).first()
+        return (await db.scalars(statement)).first()
 
     def get_multi(
         self,
-        db: Session,
+        db: AsyncSession,
         *,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
@@ -43,17 +44,19 @@ class CRUDBase(Generic[ModelType, CreateModelType, UpdateModelType]):
             statement, db, skip=skip, limit=limit, sort=sort, is_desc=is_desc
         )
 
-    def create(self, db: Session, *, obj_in: CreateModelType, commit: bool = True) -> ModelType:
+    async def create(
+        self, db: AsyncSession, *, obj_in: CreateModelType, commit: bool = True
+    ) -> ModelType:
         db_obj = self.model.model_validate(obj_in)
         db.add(db_obj)
         if commit:
-            db.commit()
-            db.refresh(db_obj)
+            await db.commit()  # to move out of function?
+            await db.refresh(db_obj)
         return db_obj
 
-    def update(
+    async def update(
         self,
-        db: Session,
+        db: AsyncSession,
         *,
         db_obj: ModelType,
         obj_in: Union[UpdateModelType, Dict[str, Any]],
@@ -67,25 +70,27 @@ class CRUDBase(Generic[ModelType, CreateModelType, UpdateModelType]):
         for field in update_data:
             snake_field = to_snake(field)
             if snake_field in update_data:
+                # Lists must be managed manually
+                if isinstance(update_data[snake_field], list):
+                    continue
                 setattr(db_obj, snake_field, update_data[snake_field])
 
         db.add(db_obj)
         if commit:
-            db.commit()
-            db.refresh(db_obj)
+            await db.commit()  # to move out of function?
+            await db.refresh(db_obj)
         return db_obj
 
-    def remove(self, db: Session, *, id: int, commit: bool = True) -> Optional[ModelType]:
-        obj = db.exec(select(self.model).where(self.model.id == id)).first()
-        db.delete(obj)
+    async def remove(self, db: AsyncSession, *, db_obj: ModelType, commit: bool = True) -> str:
+        await db.delete(db_obj)
         if commit:
-            db.commit()
-        return obj
+            await db.commit()
+        return db_obj
 
-    def order_and_paginate_results(
+    async def order_and_paginate_results(
         self,
         statement: Select,
-        db: Session,
+        db: AsyncSession,
         *,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
@@ -107,7 +112,7 @@ class CRUDBase(Generic[ModelType, CreateModelType, UpdateModelType]):
         if limit is not None:
             statement = statement.limit(limit)
 
-        items = db.exec(statement).all()
+        items = (await db.scalars(statement)).all()
         total = len(items)
         return Page(items=items, total=total)
 

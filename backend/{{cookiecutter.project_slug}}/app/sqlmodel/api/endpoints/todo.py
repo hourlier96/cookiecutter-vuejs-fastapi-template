@@ -1,16 +1,14 @@
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlmodel import Session, select
 
-from app.sqlmodel import crud
-from app.sqlmodel.api.deps import get_session, parse_query_filter_params
+from app.sqlmodel.crud.todo import todos as crud_todo
+from app.sqlmodel.api.deps import session_dep, parse_query_filter_params
 from app.core.cloud_logging import log
 from app.core.config import settings
 from app.models.base import Page
 from app.sqlmodel.models.base import QueryFilter
 from app.sqlmodel.models.todo import Todo, TodoCreate, TodoRead, TodoReadUsers, TodoUpdate
-from app.sqlmodel.models.user import User
 
 router = APIRouter()
 
@@ -19,9 +17,9 @@ router = APIRouter()
     "",
     response_model=Page[TodoRead],
 )
-def read_todos(
+async def read_todos(
     *,
-    db: Session = Depends(get_session),
+    db: session_dep,
     skip: Optional[int] = Query(0, ge=0),
     limit: Optional[int] = Query(None, ge=1, le=settings.MAX_PAGE_SIZE),
     sort: Optional[str] = None,
@@ -29,10 +27,10 @@ def read_todos(
     is_desc: bool = False,
 ) -> Page[Todo]:
     """
-    Retrieve todos.
+    Retrieve crud_todo.
     """
     try:
-        todos = crud.todos.get_multi(
+        todos = await crud_todo.get_multi(
             db, skip=skip, limit=limit, sort=sort, is_desc=is_desc, filters=filters
         )
         return todos
@@ -54,9 +52,9 @@ def read_todos(
     "/withusers",
     response_model=List[TodoReadUsers],
 )
-def read_todos_users(
+async def read_todos_users(
     *,
-    db: Session = Depends(get_session),
+    db: session_dep,
     skip: Optional[int] = Query(0, ge=0),
     limit: Optional[int] = Query(None, ge=1, le=settings.MAX_PAGE_SIZE),
     sort: Optional[str] = None,
@@ -65,7 +63,7 @@ def read_todos_users(
     """
     Retrieve todos sorted by users.
     """
-    todos = crud.todos.get_multi(db, skip=skip, limit=limit, sort=sort, is_desc=is_desc)
+    todos = await crud_todo.get_multi(db, skip=skip, limit=limit, sort=sort, is_desc=is_desc)
     return todos.items
 
 
@@ -73,28 +71,26 @@ def read_todos_users(
     "",
     response_model=TodoRead,
 )
-def create_todo(
+async def create_todo(
     *,
-    db: Session = Depends(get_session),
+    db: session_dep,
     todo_in: TodoCreate,
 ) -> Any:
     """
     Create a todo.
     """
     try:
-        todo = crud.todos.create(db=db, obj_in=todo_in, commit=False)
-        if todo_in.users_id:
-            users_list = db.exec(select(User).where(User.id.in_(todo_in.users_id))).all()
-            todo.users = [u for u in users_list]
+        todo = await crud_todo.create(db=db, obj_in=todo_in)
+        await crud_todo.update_users(db=db, todo_in=todo_in, todo=todo)
+        await db.commit()
+        await db.refresh(todo)
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         log.exception(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not create todo"
         )
-    else:
-        db.commit()
-        db.refresh(todo)
+
     return todo
 
 
@@ -102,21 +98,23 @@ def create_todo(
     "/{_id}",
     response_model=TodoRead,
 )
-def update_todo(
+async def update_todo(
     *,
-    db: Session = Depends(get_session),
+    db: session_dep,
     _id: int,
     todo_in: TodoUpdate,
 ) -> Any:
     """
     Update a todo.
     """
-    todo = crud.todos.get(db=db, id=_id)
+    todo = await crud_todo.get(db=db, id=_id)
     if not todo:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found")
-
     try:
-        todo = crud.todos.update(db=db, db_obj=todo, obj_in=todo_in)
+        todo = await crud_todo.update(db=db, db_obj=todo, obj_in=todo_in)
+        await crud_todo.update_users(db=db, todo_in=todo_in, todo=todo)
+        await db.commit()
+        await db.refresh(todo)
     except Exception as e:
         log.exception(e)
         raise HTTPException(
@@ -129,15 +127,15 @@ def update_todo(
     "/{_id}",
     response_model=TodoRead,
 )
-def read_todo(
+async def read_todo(
     *,
-    db: Session = Depends(get_session),
+    db: session_dep,
     _id: int,
 ) -> Any:
     """
     Get todo by ID.
     """
-    todo = crud.todos.get(db=db, id=_id)
+    todo = await crud_todo.get(db=db, id=_id)
     if not todo:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found")
     return todo
@@ -147,15 +145,15 @@ def read_todo(
     "/{_id}/users/",
     response_model=TodoReadUsers,
 )
-def read_todo_users(
+async def read_todo_users(
     *,
-    db: Session = Depends(get_session),
+    db: session_dep,
     _id: int,
 ) -> Todo:
     """
     Get user linked to a todo by todo ID.
     """
-    todo = crud.todos.get(db=db, id=_id)
+    todo = await crud_todo.get(db=db, id=_id)
     if not todo:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found")
     return todo
@@ -165,20 +163,21 @@ def read_todo_users(
     "/{_id}",
     response_model=TodoRead,
 )
-def delete_todo(
+async def delete_todo(
     *,
-    db: Session = Depends(get_session),
+    db: session_dep,
     _id: int,
 ) -> Any:
     """
     Delete a todo.
     """
-    todo = crud.todos.get(db=db, id=_id)
+    todo = await crud_todo.get(db=db, id=_id)
     if not todo:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found")
 
     try:
-        todo = crud.todos.remove(db=db, id=_id)
+        todo = await crud_todo.remove(db=db, db_obj=todo)
+
     except Exception as e:
         log.exception(e)
         raise HTTPException(
