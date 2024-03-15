@@ -1,5 +1,5 @@
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi.testclient import TestClient
 from tests.utils.query_filter import call_from_operator
 from tests.utils.user import create_user
 from app.core.config import settings
@@ -7,7 +7,7 @@ from app.core.config import settings
 DATASOURCES_URL = f"{settings.API_PREFIX}/sql_users"
 
 
-async def test_query_filter_users(client: TestClient, db: AsyncSession) -> None:
+async def test_query_filter_users(client: AsyncClient, db: AsyncSession) -> None:
     user0 = await create_user(
         db, "Jean", "jean.dupont@gmail.com", "jean.dupont@gmail.com", True, 135
     )

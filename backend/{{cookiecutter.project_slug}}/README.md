@@ -9,6 +9,8 @@
 ## Template Stack
 
 - [FastApi](https://fastapi.tiangolo.com/)
+- [SQLModel](https://sqlmodel.tiangolo.com/)
+- [SQLAlchemy 2](https://docs.sqlalchemy.org/en/20/)
 
 ## Project Setup
 
@@ -19,8 +21,14 @@
   ```sh
   poetry config virtualenvs.in-project true
   poetry env use 3.11
-  poetry shell                # Launch terminal with dependencies
+  poetry shell
   poetry install
+  ```
+
+- Create required databases
+
+  ```bash
+  docker compose up -d
   ```
 
 - Apply migrations
@@ -43,7 +51,6 @@ Use the launch.json configuration to build and run the container
 # (Running the launch is an equivalent to):
 docker build -t <image>:<tag> -f Dockerfile .
 docker run --name {{ cookiecutter.project_slug }} -p 8000:8000 -p 5678:5678 -v "$HOME/.config/gcloud/application_default_credentials.json":/gcp/creds.json --env GOOGLE_APPLICATION_CREDENTIALS=/gcp/creds.json --env GCLOUD_PROJECT=<gcp_project_id> <image>:<tag>
-
 
 ```
 
@@ -88,4 +95,4 @@ To allow communication between Cloud Run service & SQL instance:
 
 ### Maintainers
 
-Digital Lab
+{{cookiecutter.maintainer}}

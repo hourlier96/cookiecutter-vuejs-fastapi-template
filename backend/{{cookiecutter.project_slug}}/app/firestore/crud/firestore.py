@@ -1,11 +1,15 @@
 import google.cloud.firestore as firestore
-
+from app.core.config import settings
 from app.core.cloud_logging import Singleton
 
 
 class Firestore(metaclass=Singleton):
     def __init__(self) -> None:
-        self.client = firestore.Client()
+        # Searches first from .env, or infer if not specified
+        if settings.GCLOUD_PROJECT_ID:
+            self.client = firestore.Client(project=settings.GCLOUD_PROJECT_ID)
+        else:
+            self.client = firestore.Client()
 
     def get_all_documents(self, collection_name: str, as_dict=True) -> list[dict]:
         doc_list = self.client.collection(collection_name).get()

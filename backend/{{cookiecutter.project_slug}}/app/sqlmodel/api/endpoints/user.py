@@ -22,7 +22,7 @@ async def read_users(
     *,
     db: session_dep,
     skip: Optional[int] = Query(0, ge=0),
-    limit: Optional[int] = Query(None, ge=1, le=settings.MAX_PAGE_SIZE),
+    limit: Optional[int] = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
     sort: Optional[str] = None,
     filters: List[QueryFilter] = Depends(parse_query_filter_params),
     is_desc: bool = False,

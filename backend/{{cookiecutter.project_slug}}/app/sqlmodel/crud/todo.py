@@ -6,7 +6,6 @@ from app.sqlmodel.api.deps import session_dep
 
 
 class CrudTodo(CRUDBase[Todo, TodoCreate, TodoUpdate]):
-
     async def update_users(self, db: session_dep, todo_in: TodoCreate, todo: Todo):
         """
         Update many to many relationship if list of users_id specified

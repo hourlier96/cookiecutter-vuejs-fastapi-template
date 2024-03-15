@@ -78,11 +78,11 @@ def checkDatabaseTypeOption(value):
     """
     Check database type choice and set folders according to it
     """
+    if value == "PostgreSQL":
+        print("Setting up PostgreSQL configuration...")
+        shutil.rmtree("app/firestore")
     if value == "Firestore client":
         print("Setting up Firestore client configuration...")
         shutil.rmtree("app/sqlmodel")
-    if value == "SQLAlchemy":
-        print("Setting up SQLAlchemy 2.0 configuration...")
-        shutil.rmtree("app/firestore")
     if value == "Both":
-        print("Setting up Firestore client & SQLAlchemy 2.0 configurations...")
+        print("Setting up Firestore client & PostgreSQL configurations...")
