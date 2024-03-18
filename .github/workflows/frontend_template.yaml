@@ -30,10 +30,15 @@ jobs:
         cd ../
         cookiecutter cookiecutter-vuejs-fastapi-template/frontend --no-input
     
-    - name: Run tests
+    - name: Run server
       run: |
         cd ../vuejs_template/
         npm install --save-dev
         npm run lint
         npm run type-check
+        npm run dev &
+      
+    - name: Run tests
+      run: |
+        cd ../vuejs_template/
         npm run test:unit
