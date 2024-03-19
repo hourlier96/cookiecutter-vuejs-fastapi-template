@@ -5,13 +5,8 @@ on:
     branches:
       - main
 
-  push:
-    branches:
-      - feat/backend
-
 jobs:
   test-run-template:
-
     runs-on: ubuntu-latest
 
     services:
@@ -37,38 +32,36 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: 3.11
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
 
-    - name: Install global dependencies
-      run: |
-        pip install -r requirements.txt
-    
-    - name: Generate backend template
-      run: | 
-        cd ../
-        cookiecutter cookiecutter-vuejs-fastapi-template/backend --no-input
+      - name: Install global dependencies
+        run: |
+          pip install -r requirements.txt
 
-    - name: Install Poetry
-      run: pip install poetry
+      - name: Generate backend template
+        run: |
+          cd ../
+          cookiecutter cookiecutter-vuejs-fastapi-template/backend --no-input
 
-    - name: Run server
-      run: |
-        cd ../fastapi_template/
-        poetry config virtualenvs.in-project true
-        poetry env use 3.11
-        poetry install
-        poetry run alembic upgrade head
-        poetry run uvicorn app.main:app --reload &
-        
-    - name: Run tests
-      run: |
-        cd ../fastapi_template/
-        poetry run pytest 
+      - name: Install Poetry
+        run: pip install poetry
 
-       
+      - name: Run server
+        run: |
+          cd ../fastapi_template/
+          poetry config virtualenvs.in-project true
+          poetry env use 3.11
+          poetry install
+          poetry run alembic upgrade head
+          poetry run uvicorn app.main:app --reload &
+
+      - name: Run tests
+        run: |
+          cd ../fastapi_template/
+          poetry run pytest --cov=app --cov-report=term
