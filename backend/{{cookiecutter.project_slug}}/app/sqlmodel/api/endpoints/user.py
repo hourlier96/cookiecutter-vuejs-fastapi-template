@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-
+from app.api.deps import raise_404, raise_500
 
 from app.sqlmodel.crud.user import users as crud_user
 from app.sqlmodel.api.deps import session_dep, parse_query_filter_params
@@ -30,10 +30,14 @@ async def read_users(
     """
     Retrieve user.
     """
-    users = await crud_user.get_multi(
-        db, skip=skip, limit=limit, sort=sort, is_desc=is_desc, filters=filters
-    )
-    return users
+    try:
+        users = await crud_user.get_multi(
+            db, skip=skip, limit=limit, sort=sort, is_desc=is_desc, filters=filters
+        )
+        return users
+    except Exception as e:
+        log.exception(e)
+        raise_500()
 
 
 @router.post(
@@ -52,9 +56,8 @@ async def create_user(
         user = await crud_user.create(db=db, obj_in=user_in)
     except Exception as e:
         log.exception(e)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not create user"
-        )
+        raise_500()
+
     return user
 
 
@@ -72,5 +75,6 @@ async def read_user(
     """
     user = await crud_user.get(db=db, id=_id)
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise_404()
+
     return user

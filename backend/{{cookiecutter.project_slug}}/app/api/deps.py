@@ -7,10 +7,10 @@ from fastapi.security import HTTPBearer
 oauth2_scheme = HTTPBearer()
 
 
-def raise_400() -> NoReturn:
+def raise_400(msg=None) -> NoReturn:
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Bad Request",
+        detail=msg if msg else "Bad Request",
     )
 
 

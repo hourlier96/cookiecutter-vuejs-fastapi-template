@@ -1,6 +1,7 @@
 import json
 from typing import Annotated, List, Optional
 from fastapi import HTTPException, status, Depends
+from app.api.deps import raise_400
 from app.sqlmodel.models.base import QueryFilter
 from app.sqlmodel.db import get_db_session
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +20,4 @@ def parse_query_filter_params(filters: Optional[str] = None) -> List[QueryFilter
     elif isinstance(query_filters, dict):
         return [QueryFilter(**query_filters)]
     else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid filters",
-        )
+        raise_400(msg='Invalid query filters')

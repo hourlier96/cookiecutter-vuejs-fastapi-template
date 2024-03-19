@@ -1,6 +1,7 @@
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from app.api.deps import raise_400, raise_404, raise_500
 
 from app.sqlmodel.crud.todo import todos as crud_todo
 from app.sqlmodel.api.deps import session_dep, parse_query_filter_params
@@ -36,16 +37,10 @@ async def read_todos(
         return todos
     except (AttributeError, KeyError, ValueError) as e:
         log.exception(e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
-        )
+        raise_400()
     except Exception as e:
         log.exception(e)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Something went wrong",
-        )
+        raise_500()
 
 
 @router.get(
@@ -64,11 +59,14 @@ async def read_todos_users(
     """
     Retrieve todos sorted by users.
     """
-    todos = await crud_todo.get_multi(
-        db, skip=skip, limit=limit, sort=sort, is_desc=is_desc, filters=filters
-    )
-    return todos.items
-
+    try:
+        todos = await crud_todo.get_multi(
+            db, skip=skip, limit=limit, sort=sort, is_desc=is_desc, filters=filters
+        )
+        return todos.items
+    except Exception as e:
+        log.exception(e)
+        raise_500()
 
 @router.post(
     "",
@@ -90,9 +88,7 @@ async def create_todo(
     except Exception as e:
         await db.rollback()
         log.exception(e)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not create todo"
-        )
+        raise_500()
 
     return todo
 
@@ -112,7 +108,7 @@ async def update_todo(
     """
     todo = await crud_todo.get(db=db, id=_id)
     if not todo:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found")
+        raise_404()
     try:
         todo = await crud_todo.update(db=db, db_obj=todo, obj_in=todo_in)
         await crud_todo.update_users(db=db, todo_in=todo_in, todo=todo)
@@ -120,9 +116,8 @@ async def update_todo(
         await db.refresh(todo)
     except Exception as e:
         log.exception(e)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not update todo"
-        )
+        raise_500()
+
     return todo
 
 
@@ -140,7 +135,8 @@ async def read_todo(
     """
     todo = await crud_todo.get(db=db, id=_id)
     if not todo:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found")
+        raise_404()
+
     return todo
 
 
@@ -158,7 +154,8 @@ async def read_todo_users(
     """
     todo = await crud_todo.get(db=db, id=_id)
     if not todo:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found")
+        raise_404()
+
     return todo
 
 
@@ -176,15 +173,12 @@ async def delete_todo(
     """
     todo = await crud_todo.get(db=db, id=_id)
     if not todo:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found")
+        raise_404()
 
     try:
         todo = await crud_todo.remove(db=db, db_obj=todo)
-
     except Exception as e:
         log.exception(e)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not delete todo"
-        )
+        raise_500()
 
     return todo
